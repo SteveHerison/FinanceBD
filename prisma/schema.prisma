@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,10 +8,52 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String?
+  createdAt     DateTime       @default(now())
+  financialData FinancialData?
+  transactions  Transaction[]
 
-  @@map ("users")
+  @@map("users")
+}
+
+model FinancialData {
+  id          Int    @id @default(autoincrement())
+  userId      Int    @unique
+  salary      Float
+  extraIncome Float?
+  savings     Float?
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("financial_data")
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  userId      Int
+  amount      Float
+  type        TransactionType
+  categoryId  Int?
+  description String?
+  createdAt   DateTime        @default(now())
+  category    Category?       @relation(fields: [categoryId], references: [id])
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId], map: "transactions_categoryId_fkey")
+  @@index([userId], map: "transactions_userId_fkey")
+  @@map("transactions")
+}
+
+model Category {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  transactions Transaction[]
+
+  @@map("categories")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
 }
